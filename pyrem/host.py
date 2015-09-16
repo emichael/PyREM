@@ -49,14 +49,17 @@ class Host(object):
             command = ' '.join(command)
         self._exec(['ssh', self.__hostname, command], wait, quiet)
 
-    def send_file(self, file_name, remote_destination=None, wait=True, quiet=False):
+    def send_file(self, file_name, remote_destination=None, wait=True,
+                  quiet=False):
         if not remote_destination:
             remote_destination = file_name
 
         self._exec(['rsync', '-ut', file_name,
-                    '%s:%s' % (self.__hostname, remote_destination)], wait, quiet)
+                    '%s:%s' % (self.__hostname, remote_destination)],
+                   wait, quiet)
 
-    def get_file(self, file_name, local_destination=None, wait=True, quiet=False):
+    def get_file(self, file_name, local_destination=None, wait=True,
+                 quiet=False):
         self._exec(['rsync', '-ut', '%s:%s' % (self.__hostname, file_name),
                     local_destination], wait, quiet)
 
