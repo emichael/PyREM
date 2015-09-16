@@ -13,7 +13,7 @@
         "dist"
       ],
       "name": "PyREM Root",
-      "path": "./"
+      "path": "."
     }
   ]
 }
