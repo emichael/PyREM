@@ -1,0 +1,19 @@
+{
+  "folders":
+  [
+    {
+      "file_exclude_patterns":
+      [
+        "*.sublime-workspace",
+        "*.pyc"
+      ],
+      "folder_exclude_patterns":
+      [
+        "build",
+        "dist"
+      ],
+      "name": "PyREM Root",
+      "path": "./"
+    }
+  ]
+}

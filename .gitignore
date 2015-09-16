@@ -5,3 +5,6 @@
 /dist/
 /build/
 /*.egg-info
+
+# Sublime
+*.sublime-workspace
