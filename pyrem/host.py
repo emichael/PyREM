@@ -10,7 +10,7 @@ import os
 from subprocess import Popen
 
 
-DEVNULL = file(os.devnull)
+DEVNULL = file(os.devnull, 'w')
 
 
 class Host(object):
