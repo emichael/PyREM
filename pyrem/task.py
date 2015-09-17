@@ -72,6 +72,8 @@ class Task(object):
     def _reset(self):
         pass
 
+# TODO: define a remote task that kills the remote processes started by it in
+#       stop
 
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
