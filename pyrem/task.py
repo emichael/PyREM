@@ -8,7 +8,7 @@ sequentially and in parallel.
 import os
 
 from enum import Enum
-from subprocess import Popen
+from subprocess import Popen, PIPE
 
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED CLEANED')
@@ -78,25 +78,33 @@ class Task(object):
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
-
-    def __init__(self, command, quiet=False):
+    def __init__(self, command, quiet=False, return_output=False):
         super(SubprocessTask, self).__init__()
         self._command = command
 
-        self._kwargs = {}
-        if quiet:
-            self._kwargs['stdin'] = self.DEVNULL
-            self._kwargs['stdout'] = self.DEVNULL
-            self._kwargs['stderr'] = self.DEVNULL
+        self._popen_kwargs = {}
+        if return_output:
+            self._popen_kwargs['stdin'] = self.DEVNULL
+            self._popen_kwargs['stdout'] = PIPE
+            self._popen_kwargs['stderr'] = PIPE
+        elif quiet:
+            self._popen_kwargs['stdin'] = self.DEVNULL
+            self._popen_kwargs['stdout'] = self.DEVNULL
+            self._popen_kwargs['stderr'] = self.DEVNULL
 
         self._process = None
 
     def _start(self):
-        self._process = Popen(self._command, **self._kwargs)
+        self._process = Popen(self._command, **self._popen_kwargs)
 
     def _wait(self):
-        self._process.wait()
-        self.return_value = self._process.returncode
+        output = self._process.communicate()
+        retcode = self._process.returncode
+        self.return_value = {
+            'stdout': output[0],
+            'stderr': output[1],
+            'retcode': retcode
+        }
 
     def _stop(self):
         if self._process.returncode is None:
