@@ -1,18 +1,29 @@
 import re
+import time
 
 from pyrem.host import Host, LocalHost
-from pyrem.task import SubprocessTask
+from pyrem.task import parallel
 
-spyhunter = Host('spyhunter.cs.washington.edu')
+remote_hosts = [Host(name) for name in ['spyhunter', 'breakout', 'zork']]
 localhost = LocalHost()
 
-server = localhost.run(['iperf',  '-s'], quiet=True)
-client = spyhunter.run(['iperf',  '-c', localhost.hostname], return_output=True)
+servers = parallel([host.run(['iperf', '-s'], quiet=True)
+                    for host in remote_hosts])
+clients = [localhost.run(['iperf', '-c', host.hostname], return_output=True)
+           for host in remote_hosts]
 
-server.start()
-client.run()
-server.stop()
+servers.start()
+time.sleep(1)
+for client in clients:
+    client.run()
+    output = client.return_value['stdout']
+    s = re.search(
+        r'Client connecting to (\w+).*'
+        r'Bandwidth.*]\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)',
+        output, re.S)
+    print "%s: %s" % (s.group(1), s.group(2))
+servers.stop()
 
-output = client.return_value['stdout']
-s = re.search('Bandwidth.*]\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)', output, re.S)
-print s.group(1)
+kill_servers = parallel(
+    [host.run(['pkill', '-f', 'iperf'], quiet=True) for host in remote_hosts])
+kill_servers.run()

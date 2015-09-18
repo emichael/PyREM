@@ -110,3 +110,31 @@ class SubprocessTask(Task):
         if self._process.returncode is None:
             self._process.terminate()
             self._process.kill()
+
+def parallel(tasks):
+    class ParallelTasks(Task):
+        def __init__(self, tasks):
+            super(ParallelTasks, self).__init__()
+            self._tasks = tasks
+
+        def _start(self):
+            for task in self._tasks:
+                task.start(wait=False)
+
+        def _wait(self):
+            for task in self._tasks:
+                task.wait()
+
+        def _stop(self):
+            for task in self._tasks:
+                task.stop()
+
+        def _cleanup(self):
+            for task in self._tasks:
+                task.cleanup()
+
+        def _reset(self):
+            for task in self._tasks:
+                task.reset()
+
+    return ParallelTasks(tasks)
