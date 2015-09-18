@@ -5,6 +5,7 @@ asynchronously. There should be some easy way of combining tasks both
 sequentially and in parallel.
 """
 
+import atexit
 import os
 
 from enum import Enum
@@ -13,8 +14,16 @@ from subprocess import Popen, PIPE
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
 
-# TODO: create a global register of started tasks and add an exit hook that
-#        ensures that Taks.stop() is called for each task before Python exits
+STARTED_TASKS = set()
+
+def cleanup():
+    to_stop = STARTED_TASKS.copy()
+    for task in to_stop:
+        task.stop()
+
+atexit.register(cleanup)
+
+
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
 
@@ -27,6 +36,7 @@ class Task(object):
     def start(self, wait=False):
         if self._status is not TaskStatus.IDLE:
             raise RuntimeError("Cannot start task in state %s" % self._status)
+        STARTED_TASKS.add(self)
         self._start()
         self._status = TaskStatus.STARTED
 
@@ -56,6 +66,8 @@ class Task(object):
             raise RuntimeError("Cannot stop task in state %s" % self._status)
         self._stop()
         self._status = TaskStatus.STOPPED
+
+        STARTED_TASKS.remove(self)
 
     def _stop(self):
         pass
