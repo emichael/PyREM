@@ -15,8 +15,7 @@ clients = [localhost.run(['iperf', '-c', host.hostname], return_output=True)
 servers.start()
 time.sleep(1)
 for client in clients:
-    client.run()
-    output = client.return_value['stdout']
+    output = client.start(wait=True)['stdout']
     s = re.search(
         r'Client connecting to (\w+).*'
         r'Bandwidth.*]\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+[^\s]+)',
@@ -26,4 +25,4 @@ servers.stop()
 
 kill_servers = Parallel(
     [host.run(['pkill', '-f', 'iperf'], quiet=True) for host in remote_hosts])
-kill_servers.run()
+kill_servers.start(wait=True)

@@ -11,18 +11,13 @@ from enum import Enum
 from subprocess import Popen, PIPE
 
 
-TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED CLEANED')
+TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
 
 
 class Task(object):
     def __init__(self):
         self._status = TaskStatus.IDLE
         self.return_value = None
-
-    def run(self):
-        self.start(wait=True)
-        self.stop()
-        self.cleanup()
 
     def start(self, wait=False):
         if self._status is not TaskStatus.IDLE:
@@ -33,6 +28,8 @@ class Task(object):
         if wait:
             self.wait()
 
+        return self.return_value
+
     def _start(self):
         raise NotImplementedError
 
@@ -40,11 +37,16 @@ class Task(object):
         if self._status is not TaskStatus.STARTED:
             raise RuntimeError("Cannot wait on task in state %s" % self._status)
         self._wait()
+        self.stop()
+        return self.return_value
 
     def _wait(self):
         pass
 
     def stop(self):
+        if self._status is TaskStatus.STOPPED:
+            return
+
         if self._status is not TaskStatus.STARTED:
             raise RuntimeError("Cannot stop task in state %s" % self._status)
         self._stop()
@@ -53,17 +55,8 @@ class Task(object):
     def _stop(self):
         pass
 
-    def cleanup(self):
-        if self._status is not TaskStatus.STOPPED:
-            raise RuntimeError("Cannot cleanup task in state %s" % self._status)
-        self._cleanup()
-        self._status = TaskStatus.CLEANED
-
-    def _cleanup(self):
-        pass
-
     def reset(self):
-        if self._status is not TaskStatus.CLEANED:
+        if self._status is not TaskStatus.STOPPED:
             raise RuntimeError("Cannot reset task in state %s" % self._status)
         self._reset()
         self.return_value = None
@@ -127,10 +120,6 @@ class Parallel(Task):
     def _stop(self):
         for task in self._tasks:
             task.stop()
-
-    def _cleanup(self):
-        for task in self._tasks:
-            task.cleanup()
 
     def _reset(self):
         for task in self._tasks:
