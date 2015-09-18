@@ -13,6 +13,11 @@ from subprocess import Popen, PIPE
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
 
+# TODO: create a global register of started tasks and add an exit hook that
+#        ensures that Taks.stop() is called for each task before Python exits
+
+# TODO: create a wait_stopped() so that Tasks can be stopped in parallel
+
 
 class Task(object):
     def __init__(self):
