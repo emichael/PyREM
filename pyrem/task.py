@@ -145,11 +145,14 @@ class SubprocessTask(Task):
         self._process = Popen(self._command, **self._popen_kwargs)
 
     def _wait(self):
+        # Wait for process to finish
         output = self._process.communicate()
+        # Raise error if necessary
         retcode = self._process.returncode
         if self._require_success and retcode:
             raise RuntimeError("Return code should have been 0, was %s" %
                                retcode)
+        # Put return code and output in return_values
         self.return_values['stdout'] = output[0]
         self.return_values['stderr'] = output[1]
         self.return_values['retcode'] = retcode
@@ -168,9 +171,8 @@ class SubprocessTask(Task):
 class RemoteTask(SubprocessTask):
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True):
-        self._host = host
         assert isinstance(command, list)
-        ssh_command = ['ssh', host, ' '.join(command)]
+        self._host = host
 
         self._kill_remote = kill_remote
         if kill_remote:
@@ -183,9 +185,10 @@ class RemoteTask(SubprocessTask):
             # safe. If the command ends in a &, for instance, this will just
             # fail on the spot. Try to figure out a good way around this, but at
             # least warn the user in RemoteTask's docstring
-            ssh_command.append(' & pgrep -P $$ >%s' % self._tmp_file_name)
+            command.append(' & jobs -p >%s ; wait' % self._tmp_file_name)
 
-        super(RemoteTask, self).__init__(ssh_command, quiet=quiet,
+        super(RemoteTask, self).__init__(['ssh', host, ' '.join(command)],
+                                         quiet=quiet,
                                          return_output=return_output,
                                          shell=False)
 
