@@ -165,7 +165,6 @@ class SubprocessTask(Task):
                     self._status, self.return_value, self._command,
                     self._popen_kwargs))
 
-# TODO: add an option to skip the tmpfile, pgrep, and cleanup stuff
 class RemoteTask(SubprocessTask):
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True):
