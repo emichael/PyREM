@@ -26,7 +26,10 @@ def cleanup():
     if to_stop:
         print "Cleaning up..."
     for task in to_stop:
-        task.stop()
+        try:
+            task.stop()
+        except:
+            continue # TODO: something appropriate here
 
 atexit.register(cleanup)
 
@@ -45,7 +48,8 @@ class Task(object):
     @synchronized
     def start(self, wait=False):
         if self._status is not TaskStatus.IDLE:
-            raise RuntimeError("Cannot start task in state %s" % self._status)
+            raise RuntimeError("Cannot start %s in state %s" %
+                               (self, self._status))
         STARTED_TASKS.add(self)
         self._start()
         self._status = TaskStatus.STARTED
@@ -61,7 +65,8 @@ class Task(object):
     @synchronized
     def wait(self):
         if self._status is not TaskStatus.STARTED:
-            raise RuntimeError("Cannot wait on task in state %s" % self._status)
+            raise RuntimeError("Cannot wait on %s in state %s" %
+                               (self, self._status))
         self._wait()
         self.stop()
         return self.return_value
@@ -75,7 +80,8 @@ class Task(object):
             return
 
         if self._status is not TaskStatus.STARTED:
-            raise RuntimeError("Cannot stop task in state %s" % self._status)
+            raise RuntimeError("Cannot stop %s in state %s" %
+                               (self, self._status))
         self._stop()
         self._status = TaskStatus.STOPPED
 
@@ -87,7 +93,8 @@ class Task(object):
     @synchronized
     def reset(self):
         if self._status is not TaskStatus.STOPPED:
-            raise RuntimeError("Cannot reset task in state %s" % self._status)
+            raise RuntimeError("Cannot reset %s in state %s" %
+                               (self, self._status))
         self._reset()
         self.return_value = None
         self._status = TaskStatus.IDLE
@@ -103,10 +110,12 @@ class Task(object):
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
-    def __init__(self, command, quiet=False, return_output=False, shell=False):
+    def __init__(self, command, quiet=False, return_output=False, shell=False,
+                 require_success=False):
         super(SubprocessTask, self).__init__()
         assert isinstance(command, list)
         self._command = [str(c) for c in command]
+        self._require_success=require_success
 
         self._popen_kwargs = {}
         self._popen_kwargs['stdin'] = self.DEVNULL
@@ -129,6 +138,9 @@ class SubprocessTask(Task):
         output = self._process.communicate()
         # TODO: add an option to require return code 0 or raise exception
         retcode = self._process.returncode
+        if self._require_success and retcode:
+            raise RuntimeError("Return code should have been 0, was %s" %
+                               retcode)
         self.return_value = {
             'stdout': output[0],
             'stderr': output[1],
@@ -238,6 +250,7 @@ class Sequential(Task):
         for task in self._tasks:
             # FIXME this isn't threadsafe at all, have to have a way to signal
             #       the executing thread
+            # FIXME this shouldn't call stop on all the threads, just the executing/executed ones
             task.stop()
 
     def _reset(self):
