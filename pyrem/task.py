@@ -37,7 +37,7 @@ class Task(object):
 
     def __init__(self):
         self._status = TaskStatus.IDLE
-        self.return_value = None
+        self.return_value = None # TODO: make this always a dict, rename return_values
 
     def start(self, wait=False):
         if self._status is not TaskStatus.IDLE:
