@@ -148,6 +148,10 @@ class RemoteTask(SubprocessTask):
         self._tmp_file_name = '/tmp/pyrem_procs-' + ''.join(
             random.SystemRandom().choice(string.ascii_lowercase + string.digits)
             for _ in range(8))
+        # TODO: Ending the user's command with ' & pgrep ...' might not be safe.
+        #       If the command ends in a &, for instance, this will just fail on
+        #       the spot. Try to figure out a good way around this, but at least
+        #       warn the user in RemoteTask's docstring
         ssh_command = ['ssh', host, ' '.join(command) +
                        ' & pgrep -P $$ >%s' % self._tmp_file_name]
 
