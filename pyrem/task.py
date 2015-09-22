@@ -26,7 +26,6 @@ def cleanup():
 atexit.register(cleanup)
 
 
-
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
 
 
@@ -84,8 +83,13 @@ class Task(object):
     def _reset(self):
         pass
 
+    def __repr__(self):
+        return "Task(status=%s, return_value=%s)" % (
+            self._status, self.return_value)
+
 # TODO: define a remote task that kills the remote processes started by it in
 #       stop
+
 
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
@@ -126,6 +130,13 @@ class SubprocessTask(Task):
             self._process.terminate()
             self._process.kill()
 
+    def __repr__(self):
+        return ("SubprocessTask(status=%s, return_value=%s, command=%s, "
+                "popen_kwargs=%s)" % (
+                    self._status, self.return_value, self._command,
+                    self._popen_kwargs))
+
+# TODO: add an option to skip the tmpfile, pgrep, and cleanup stuff
 class Parallel(Task):
     def __init__(self, tasks):
         super(Parallel, self).__init__()
@@ -146,3 +157,10 @@ class Parallel(Task):
     def _reset(self):
         for task in self._tasks:
             task.reset()
+
+    def __repr__(self):
+        return "ParallelTask(status=%s, return_value=%s, tasks=%s)" % (
+                self._status, self.return_value, self._tasks
+            )
+
+
