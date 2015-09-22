@@ -10,6 +10,7 @@ import os
 
 from enum import Enum
 from subprocess import Popen, PIPE
+from threading import Thread
 
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
@@ -164,3 +165,36 @@ class Parallel(Task):
             )
 
 
+class Sequential(Task):
+    def __init__(self, tasks):
+        super(Sequential, self).__init__()
+        assert isinstance(tasks, list)
+        self._tasks = tasks
+
+        def run_thread(tasks):
+            for task in tasks:
+                task.start(wait=True)
+
+        self._thread = Thread(target=run_thread, args=(tasks,))
+
+    def _start(self):
+        self._thread.start()
+        assert self._thread.is_alive()
+
+    def _wait(self):
+        self._thread.join()
+
+    def _stop(self):
+        for task in self._tasks:
+            # FIXME this isn't threadsafe at all, have to have a way to signal
+            #       the executing thread
+            task.stop()
+
+    def _reset(self):
+        for task in self._tasks:
+            task.reset()
+
+    def __repr__(self):
+        return "SequentialTask(status=%s, return_value=%s, tasks=%s)" % (
+                self._status, self.return_value, self._tasks
+            )
