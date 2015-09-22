@@ -32,7 +32,8 @@ atexit.register(cleanup)
 
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
-
+# TODO: synchronizing Task methods might cause problems for the cleanup when
+#       the Task's methods are interrupted
 
 class Task(object):
 
@@ -147,19 +148,24 @@ class SubprocessTask(Task):
 
 # TODO: add an option to skip the tmpfile, pgrep, and cleanup stuff
 class RemoteTask(SubprocessTask):
-    def __init__(self, host, command, quiet=False, return_output=False):
-        assert isinstance(command, list)
+    def __init__(self, host, command, quiet=False, return_output=False,
+                 kill_remote=True):
         self._host = host
-        # Temp file holds the PIDs of processes started on remote host
-        self._tmp_file_name = '/tmp/pyrem_procs-' + ''.join(
-            random.SystemRandom().choice(string.ascii_lowercase + string.digits)
-            for _ in range(8))
-        # TODO: Ending the user's command with ' & pgrep ...' might not be safe.
-        #       If the command ends in a &, for instance, this will just fail on
-        #       the spot. Try to figure out a good way around this, but at least
-        #       warn the user in RemoteTask's docstring
-        ssh_command = ['ssh', host, ' '.join(command) +
-                       ' & pgrep -P $$ >%s' % self._tmp_file_name]
+        assert isinstance(command, list)
+        ssh_command = ['ssh', host, ' '.join(command)]
+
+        self._kill_remote = kill_remote
+        if kill_remote:
+            # Temp file holds the PIDs of processes started on remote host
+            self._tmp_file_name = '/tmp/pyrem_procs-' + ''.join(
+                random.SystemRandom().choice(
+                    string.ascii_lowercase + string.digits)
+                for _ in range(8))
+            # TODO: Ending the user's command with ' & pgrep ...' might not be
+            # safe. If the command ends in a &, for instance, this will just
+            # fail on the spot. Try to figure out a good way around this, but at
+            # least warn the user in RemoteTask's docstring
+            ssh_command.append(' & pgrep -P $$ >%s' % self._tmp_file_name)
 
         super(RemoteTask, self).__init__(ssh_command, quiet=quiet,
                                          return_output=return_output,
@@ -168,10 +174,11 @@ class RemoteTask(SubprocessTask):
     def _stop(self):
         super(RemoteTask, self)._stop()
         # Silence the kill_proc to prevent messages about already killed procs
-        kill_proc = Popen(
-            ['ssh', self._host, 'kill -9 `cat %s`' % self._tmp_file_name],
-            stdout=self.DEVNULL, stderr=self.DEVNULL, stdin=self.DEVNULL)
-        kill_proc.wait()
+        if self._kill_remote:
+            kill_proc = Popen(
+                ['ssh', self._host, 'kill -9 `cat %s`' % self._tmp_file_name],
+                stdout=self.DEVNULL, stderr=self.DEVNULL, stdin=self.DEVNULL)
+            kill_proc.wait()
 
 
     def __repr__(self):
