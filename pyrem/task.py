@@ -197,7 +197,8 @@ class RemoteTask(SubprocessTask):
         # Silence the kill_proc to prevent messages about already killed procs
         if self._kill_remote:
             kill_proc = Popen(
-                ['ssh', self._host, 'kill -9 `cat %s`' % self._tmp_file_name],
+                ['ssh', self._host, 'kill -9 `cat %s` ; rm %s' %
+                 (self._tmp_file_name, self._tmp_file_name)],
                 stdout=self.DEVNULL, stderr=self.DEVNULL, stdin=self.DEVNULL)
             kill_proc.wait()
 
