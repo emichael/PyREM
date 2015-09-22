@@ -208,6 +208,8 @@ class RemoteTask(SubprocessTask):
 
 
 class Parallel(Task):
+    """A task that executes several given tasks in parallel."""
+
     def __init__(self, tasks):
         super(Parallel, self).__init__()
         self._tasks = tasks
@@ -235,6 +237,8 @@ class Parallel(Task):
 
 
 class Sequential(Task):
+    """A tasks that executes several given tasks in sequence."""
+
     def __init__(self, tasks):
         super(Sequential, self).__init__()
         assert isinstance(tasks, list)
