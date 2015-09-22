@@ -7,7 +7,7 @@ asynchronously.
 
 import platform
 
-from pyrem.task import SubprocessTask
+from pyrem.task import SubprocessTask, RemoteTask
 
 
 class Host(object):
@@ -18,15 +18,15 @@ class Host(object):
     def run(self, command, **kwargs):
         """Run a command on the remote host.
 
+        This is just a wrapper around RemoteTask(...)
+
         Args:
             command: List. The command to execute on the remote host.
             quiet: Boolean. Whether or not to print process output.
         Return:
             A SubprocessTask.
         """
-        if isinstance(command, list):
-            command = ' '.join(command)
-        return SubprocessTask(['ssh', self.hostname, command], **kwargs)
+        return RemoteTask(self.hostname, command, **kwargs)
 
     def send_file(self, file_name, remote_destination=None, **kwargs):
         if not remote_destination:

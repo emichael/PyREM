@@ -7,6 +7,8 @@ sequentially and in parallel.
 
 import atexit
 import os
+import random
+import string
 
 from enum import Enum
 from subprocess import Popen, PIPE
@@ -138,6 +140,37 @@ class SubprocessTask(Task):
                     self._popen_kwargs))
 
 # TODO: add an option to skip the tmpfile, pgrep, and cleanup stuff
+class RemoteTask(SubprocessTask):
+    def __init__(self, host, command, quiet=False, return_output=False):
+        assert isinstance(command, list)
+        self._host = host
+        # Temp file holds the PIDs of processes started on remote host
+        self._tmp_file_name = '/tmp/pyrem_procs-' + ''.join(
+            random.SystemRandom().choice(string.ascii_lowercase + string.digits)
+            for _ in range(8))
+        ssh_command = ['ssh', host, ' '.join(command) +
+                       ' & pgrep -P $$ >%s' % self._tmp_file_name]
+
+        super(RemoteTask, self).__init__(ssh_command, quiet=quiet,
+                                         return_output=return_output,
+                                         shell=False)
+
+    def _stop(self):
+        super(RemoteTask, self)._stop()
+        # Silence the kill_proc to prevent messages about already killed procs
+        kill_proc = Popen(
+            ['ssh', self._host, 'kill -9 `cat %s`' % self._tmp_file_name],
+            stdout=self.DEVNULL, stderr=self.DEVNULL, stdin=self.DEVNULL)
+        kill_proc.wait()
+
+
+    def __repr__(self):
+        return ("RemoteTask(status=%s, return_value=%s, command=%s, "
+                "popen_kwargs=%s)" % (
+                    self._status, self.return_value, self._command,
+                    self._popen_kwargs))
+
+
 class Parallel(Task):
     def __init__(self, tasks):
         super(Parallel, self).__init__()
