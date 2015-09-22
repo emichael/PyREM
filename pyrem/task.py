@@ -243,10 +243,18 @@ class Sequential(Task):
         super(Sequential, self).__init__()
         assert isinstance(tasks, list)
         self._tasks = tasks
+        self._exception = None
 
         def run_thread(tasks):
-            for task in tasks:
-                task.start(wait=True)
+            try:
+                for task in tasks:
+                    task.start(wait=True)
+            except: # pylint: disable=W0702
+                # Just record the exception and return, the main thread will
+                # raise it
+                exc = sys.exc_info()
+                self._exception = exc
+                return
 
         self._thread = Thread(target=run_thread, args=(tasks,))
 
@@ -256,13 +264,18 @@ class Sequential(Task):
 
     def _wait(self):
         self._thread.join()
+        if self._exception:
+            raise self._exception[0], self._exception[1], self._exception[2]
 
     def _stop(self):
+        # FIXME this isn't threadsafe at all, have to have a way to signal
+        #       the executing thread to stop
         for task in self._tasks:
-            # FIXME this isn't threadsafe at all, have to have a way to signal
-            #       the executing thread
-            # FIXME this shouldn't call stop on all the threads, just the executing/executed ones
-            task.stop()
+            # pylint: disable=W0212
+            if task._status in [TaskStatus.STARTED, TaskStatus.STOPPED]:
+                task.stop()
+            else:
+                return
 
     def _reset(self):
         for task in self._tasks:
