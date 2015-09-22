@@ -12,12 +12,14 @@ import string
 
 from enum import Enum
 from subprocess import Popen, PIPE
-from threading import Thread
+from threading import RLock, Thread
+
+from utils import synchronized
 
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
 
-STARTED_TASKS = set() # TODO: figure out why some IDLE tasks end up here
+STARTED_TASKS = set()
 
 def cleanup():
     to_stop = STARTED_TASKS.copy()
@@ -33,12 +35,13 @@ atexit.register(cleanup)
 
 
 class Task(object):
-    # TODO: put a lock on Task objects to make all function calls atomic
 
     def __init__(self):
         self._status = TaskStatus.IDLE
+        self._lock = RLock()
         self.return_value = None
 
+    @synchronized
     def start(self, wait=False):
         if self._status is not TaskStatus.IDLE:
             raise RuntimeError("Cannot start task in state %s" % self._status)
@@ -54,6 +57,7 @@ class Task(object):
     def _start(self):
         raise NotImplementedError
 
+    @synchronized
     def wait(self):
         if self._status is not TaskStatus.STARTED:
             raise RuntimeError("Cannot wait on task in state %s" % self._status)
@@ -64,6 +68,7 @@ class Task(object):
     def _wait(self):
         pass
 
+    @synchronized
     def stop(self):
         if self._status is TaskStatus.STOPPED:
             return
@@ -78,6 +83,7 @@ class Task(object):
     def _stop(self):
         pass
 
+    @synchronized
     def reset(self):
         if self._status is not TaskStatus.STOPPED:
             raise RuntimeError("Cannot reset task in state %s" % self._status)
@@ -92,16 +98,14 @@ class Task(object):
         return "Task(status=%s, return_value=%s)" % (
             self._status, self.return_value)
 
-# TODO: define a remote task that kills the remote processes started by it in
-#       stop
-
 
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
     def __init__(self, command, quiet=False, return_output=False, shell=False):
         super(SubprocessTask, self).__init__()
-        self._command = command
+        assert isinstance(command, list)
+        self._command = [str(c) for c in command]
 
         self._popen_kwargs = {}
         self._popen_kwargs['stdin'] = self.DEVNULL
