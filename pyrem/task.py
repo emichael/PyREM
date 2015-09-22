@@ -9,29 +9,36 @@ import atexit
 import os
 import random
 import string
+import sys
 
 from enum import Enum
 from subprocess import Popen, PIPE
 from threading import RLock, Thread
 
-from utils import synchronized
+from pyrem.utils import synchronized
 
-
-TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
+TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED') # pylint: disable=C0103
 
 STARTED_TASKS = set()
 
+@atexit.register
 def cleanup():
+    """Stop all started tasks on system exit.
+
+    Note: This only handles signals caught by the atexit module by default.
+    SIGKILL, for instance, will not be caught, so cleanup is not guaranteed in
+    all cases.
+    """
     to_stop = STARTED_TASKS.copy()
     if to_stop:
         print "Cleaning up..."
     for task in to_stop:
         try:
             task.stop()
-        except:
-            continue # TODO: something appropriate here
-
-atexit.register(cleanup)
+        except: # pylint: disable=W0702
+            exc = sys.exc_info()[0]
+            print "Encountered exception during cleanup of %s: %s" % (task, exc)
+            continue
 
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
@@ -51,8 +58,8 @@ class Task(object):
             raise RuntimeError("Cannot start %s in state %s" %
                                (self, self._status))
         STARTED_TASKS.add(self)
-        self._start()
         self._status = TaskStatus.STARTED
+        self._start()
 
         if wait:
             self.wait()
@@ -83,8 +90,8 @@ class Task(object):
             raise RuntimeError("Cannot stop %s in state %s" %
                                (self, self._status))
         self._stop()
-        self._status = TaskStatus.STOPPED
 
+        self._status = TaskStatus.STOPPED
         STARTED_TASKS.remove(self)
 
     def _stop(self):
