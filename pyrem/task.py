@@ -46,15 +46,13 @@ def cleanup():
 
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
-# TODO: synchronizing Task methods might cause problems for the cleanup when
-#       the Task's methods are interrupted
 
 class Task(object):
 
     def __init__(self):
-        self._status = TaskStatus.IDLE
         self._lock = RLock()
-        self.return_value = None # TODO: make this always a dict, rename return_values
+        self._status = TaskStatus.IDLE
+        self.return_values = {}
 
     @synchronized
     def start(self, wait=False):
@@ -68,7 +66,7 @@ class Task(object):
         if wait:
             self.wait()
 
-        return self.return_value
+        return self.return_values
 
     def _start(self):
         raise NotImplementedError
@@ -80,7 +78,7 @@ class Task(object):
                                (self, self._status))
         self._wait()
         self.stop()
-        return self.return_value
+        return self.return_values
 
     def _wait(self):
         pass
@@ -107,26 +105,27 @@ class Task(object):
             raise RuntimeError("Cannot reset %s in state %s" %
                                (self, self._status))
         self._reset()
-        self.return_value = None
+        self.return_values = {}
         self._status = TaskStatus.IDLE
 
     def _reset(self):
         pass
 
     def __repr__(self):
-        return "Task(status=%s, return_value=%s)" % (
-            self._status, self.return_value)
+        return "Task(status=%s, return_values=%s)" % (
+            self._status, self.return_values)
 
 
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
+    # pylint: disable=too-many-arguments
     def __init__(self, command, quiet=False, return_output=False, shell=False,
                  require_success=False):
         super(SubprocessTask, self).__init__()
         assert isinstance(command, list)
         self._command = [str(c) for c in command]
-        self._require_success=require_success
+        self._require_success = require_success
 
         self._popen_kwargs = {}
         self._popen_kwargs['stdin'] = self.DEVNULL
@@ -147,16 +146,13 @@ class SubprocessTask(Task):
 
     def _wait(self):
         output = self._process.communicate()
-        # TODO: add an option to require return code 0 or raise exception
         retcode = self._process.returncode
         if self._require_success and retcode:
             raise RuntimeError("Return code should have been 0, was %s" %
                                retcode)
-        self.return_value = {
-            'stdout': output[0],
-            'stderr': output[1],
-            'retcode': retcode
-        }
+        self.return_values['stdout'] = output[0]
+        self.return_values['stderr'] = output[1]
+        self.return_values['retcode'] = retcode
 
     def _stop(self):
         if self._process.returncode is None:
@@ -164,9 +160,9 @@ class SubprocessTask(Task):
             self._process.kill()
 
     def __repr__(self):
-        return ("SubprocessTask(status=%s, return_value=%s, command=%s, "
+        return ("SubprocessTask(status=%s, return_values=%s, command=%s, "
                 "popen_kwargs=%s)" % (
-                    self._status, self.return_value, self._command,
+                    self._status, self.return_values, self._command,
                     self._popen_kwargs))
 
 class RemoteTask(SubprocessTask):
@@ -204,9 +200,9 @@ class RemoteTask(SubprocessTask):
 
 
     def __repr__(self):
-        return ("RemoteTask(status=%s, return_value=%s, command=%s, "
+        return ("RemoteTask(status=%s, return_values=%s, command=%s, "
                 "popen_kwargs=%s)" % (
-                    self._status, self.return_value, self._command,
+                    self._status, self.return_values, self._command,
                     self._popen_kwargs))
 
 
@@ -234,8 +230,8 @@ class Parallel(Task):
             task.reset()
 
     def __repr__(self):
-        return "ParallelTask(status=%s, return_value=%s, tasks=%s)" % (
-                self._status, self.return_value, self._tasks
+        return "ParallelTask(status=%s, return_values=%s, tasks=%s)" % (
+                self._status, self.return_values, self._tasks
             )
 
 
@@ -285,6 +281,6 @@ class Sequential(Task):
             task.reset()
 
     def __repr__(self):
-        return "SequentialTask(status=%s, return_value=%s, tasks=%s)" % (
-                self._status, self.return_value, self._tasks
+        return "SequentialTask(status=%s, return_values=%s, tasks=%s)" % (
+                self._status, self.return_values, self._tasks
             )
