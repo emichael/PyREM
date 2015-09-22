@@ -33,6 +33,8 @@ atexit.register(cleanup)
 
 
 class Task(object):
+    # TODO: put a lock on Task objects to make all function calls atomic
+
     def __init__(self):
         self._status = TaskStatus.IDLE
         self.return_value = None
