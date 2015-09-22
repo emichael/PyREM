@@ -14,10 +14,12 @@ from subprocess import Popen, PIPE
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED')
 
-STARTED_TASKS = set()
+STARTED_TASKS = set() # TODO: figure out why some IDLE tasks end up here
 
 def cleanup():
     to_stop = STARTED_TASKS.copy()
+    if to_stop:
+        print "Cleaning up..."
     for task in to_stop:
         task.stop()
 
@@ -88,17 +90,19 @@ class Task(object):
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
-    def __init__(self, command, quiet=False, return_output=False):
+    def __init__(self, command, quiet=False, return_output=False, shell=False):
         super(SubprocessTask, self).__init__()
         self._command = command
 
         self._popen_kwargs = {}
+        self._popen_kwargs['stdin'] = self.DEVNULL
+        if shell:
+            self._popen_kwargs['shell'] = True
+            self._command = ' '.join(self._command)
         if return_output:
-            self._popen_kwargs['stdin'] = self.DEVNULL
             self._popen_kwargs['stdout'] = PIPE
             self._popen_kwargs['stderr'] = PIPE
         elif quiet:
-            self._popen_kwargs['stdin'] = self.DEVNULL
             self._popen_kwargs['stdout'] = self.DEVNULL
             self._popen_kwargs['stderr'] = self.DEVNULL
 
@@ -109,6 +113,7 @@ class SubprocessTask(Task):
 
     def _wait(self):
         output = self._process.communicate()
+        # TODO: add an option to require return code 0 or raise exception
         retcode = self._process.returncode
         self.return_value = {
             'stdout': output[0],
