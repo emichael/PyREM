@@ -1,4 +1,8 @@
-"""Contains useful utilities used in other modules."""
+"""utils.py: Contains useful utilities to be used in other modules."""
+
+__author__ = "Ellis Michael"
+__email__ = "emichael@cs.washington.edu"
+
 
 def synchronized(func):
     """Decorator to make function synchronized on self._lock.

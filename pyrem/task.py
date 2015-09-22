@@ -1,9 +1,12 @@
-"""Contains the main unit of execution in PyREM, the task.
+"""task.py: Contains the main unit of execution in PyREM, the task.
 
 Tasks should be composable and should be able to be executed synchronously or
 asynchronously. There should be some easy way of combining tasks both
 sequentially and in parallel.
 """
+
+__author__ = "Ellis Michael"
+__email__ = "emichael@cs.washington.edu"
 
 import atexit
 import os
@@ -16,6 +19,7 @@ from subprocess import Popen, PIPE
 from threading import RLock, Thread
 
 from pyrem.utils import synchronized
+
 
 TaskStatus = Enum('TaskStatus', 'IDLE STARTED STOPPED') # pylint: disable=C0103
 

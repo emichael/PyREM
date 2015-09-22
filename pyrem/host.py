@@ -1,9 +1,13 @@
-"""Contains the class that controls a remote host.
+"""host.py: Contains the class that controls a remote host.
 
 This host object should be a simple wrapper around ssh/scp with a easy, simple
 interface. Commands should be able to be executed synchronously or
 asynchronously.
 """
+
+__author__ = "Ellis Michael"
+__email__ = "emichael@cs.washington.edu"
+
 
 import platform
 
