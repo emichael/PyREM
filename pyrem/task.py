@@ -40,8 +40,9 @@ def cleanup():
         try:
             task.stop()
         except: # pylint: disable=W0702
-            exc = sys.exc_info()[0]
-            print "Encountered exception during cleanup of %s: %s" % (task, exc)
+            exc = sys.exc_info()
+            print ("Encountered exception during cleanup of %s.\n\t%s, %s, %s" %
+                   (task, exc[0], exc[1], exc[2]))
             continue
 
 
@@ -59,8 +60,8 @@ class Task(object):
         if self._status is not TaskStatus.IDLE:
             raise RuntimeError("Cannot start %s in state %s" %
                                (self, self._status))
-        STARTED_TASKS.add(self)
         self._status = TaskStatus.STARTED
+        STARTED_TASKS.add(self)
         self._start()
 
         if wait:
@@ -93,8 +94,8 @@ class Task(object):
                                (self, self._status))
         self._stop()
 
-        self._status = TaskStatus.STOPPED
         STARTED_TASKS.remove(self)
+        self._status = TaskStatus.STOPPED
 
     def _stop(self):
         pass
@@ -112,6 +113,7 @@ class Task(object):
         pass
 
     def __repr__(self):
+        # TODO: don't make the reprs so verbose, add a user defined name option?
         return "Task(status=%s, return_values=%s)" % (
             self._status, self.return_values)
 
@@ -226,6 +228,7 @@ class Parallel(Task):
             task.wait()
 
     def _stop(self):
+        # TODO: this isn't quite right if there was an exception during _start
         for task in self._tasks:
             task.stop()
 
