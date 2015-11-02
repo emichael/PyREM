@@ -47,6 +47,7 @@ def cleanup():
 
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
+# TODO: docs for everything
 
 class Task(object):
 
@@ -118,6 +119,7 @@ class Task(object):
             self._status, self.return_values)
 
 
+# TODO: option for sending output to file
 class SubprocessTask(Task):
     DEVNULL = file(os.devnull, 'w')
 
@@ -170,6 +172,8 @@ class SubprocessTask(Task):
                     self._status, self.return_values, self._command,
                     self._popen_kwargs))
 
+
+# TODO: option for sending remote output to remote file
 class RemoteTask(SubprocessTask):
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True):
@@ -183,7 +187,7 @@ class RemoteTask(SubprocessTask):
                 random.SystemRandom().choice(
                     string.ascii_lowercase + string.digits)
                 for _ in range(8))
-            # TODO: Ending the user's command with ' & pgrep ...' might not be
+            # TODO: Ending the user's command with ' & jobs ...' might not be
             # safe. If the command ends in a &, for instance, this will just
             # fail on the spot. Try to figure out a good way around this, but at
             # least warn the user in RemoteTask's docstring
@@ -258,8 +262,7 @@ class Sequential(Task):
             except: # pylint: disable=W0702
                 # Just record the exception and return, the main thread will
                 # raise it
-                exc = sys.exc_info()
-                self._exception = exc
+                self._exception = sys.exc_info()
                 return
 
         self._thread = Thread(target=run_thread, args=(tasks,))

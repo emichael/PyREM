@@ -4,6 +4,8 @@ __author__ = "Ellis Michael"
 __email__ = "emichael@cs.washington.edu"
 
 
+from IPython.terminal.embed import InteractiveShellEmbed
+
 def synchronized(func):
     """Decorator to make function synchronized on self._lock.
 
@@ -17,3 +19,9 @@ def synchronized(func):
         with args[0]._lock: # pylint: disable=W0212
             return func(*args, **kwargs)
     return locked_function
+
+interact = InteractiveShellEmbed(
+    banner1="---Starting Interactive Shell---\n",
+    exit_msg="---Resuming Program---\n")
+
+# TODO: util for capturing stdout and TEEing it to a file (either concat or overwrite)
