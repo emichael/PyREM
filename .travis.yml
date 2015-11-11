@@ -8,7 +8,7 @@ install:
 
 script:
   - make test
-  # Now, install development dependencies and run the tests
+  # Now, install development dependencies and run the coverage tests
   - pip install -r requirements-dev.txt
   - nosetests --with-coverage --cover-package pyrem
 
