@@ -10,3 +10,4 @@ lint:
 clean:
 	rm -rf build/ dist/
 	find -name '*.pyc' -delete
+	make -C docs clean
