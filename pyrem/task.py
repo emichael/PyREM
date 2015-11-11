@@ -8,6 +8,9 @@ sequentially and in parallel.
 __author__ = "Ellis Michael"
 __email__ = "emichael@cs.washington.edu"
 
+__all__ = ['Task', 'SubprocessTask', 'RemoteTask', 'Parallel',
+           'Sequential']
+
 import atexit
 import os
 import random
@@ -50,7 +53,20 @@ def cleanup():
 # TODO: docs for everything
 
 class Task(object):
-    """The main unit of execution in PyREM."""
+    """The main unit of execution in PyREM.
+
+    If you would like to define your own type of ``Task``, you should at least
+    implement the ``_start``, ``_wait``, ``_stop``, and ``_reset`` methods.
+
+    Every task that gets started will be stopped on Python exit, as long as that
+    exit can be caught by the ``atexit`` module (e.g. pressing `Ctrl+C` will be
+    caught, but sending `SIGKILL` will not be caught).
+
+    Attributes:
+        return_values (dict): Subclasses of ``Task`` should store all of their
+            results in this field and document what the possible return values
+            are.
+    """
 
     def __init__(self):
         self._lock = RLock()
@@ -62,11 +78,15 @@ class Task(object):
         """Start a task.
 
         This function depends on the underlying implementation of _start, which
-        any subclass of Task should implement.
+        any subclass of ``Task`` should implement.
 
-        Kwargs:
-            wait: boolean. Whether or not to wait on the task to finish before
-                  returning from this function
+        Args:
+            wait (bool): Whether or not to wait on the task to finish before
+                returning from this function. Default `False`.
+
+        Raises:
+            RuntimeError: If the task has already been started without a
+                subsequent call to ``reset()``.
         """
         if self._status is not TaskStatus.IDLE:
             raise RuntimeError("Cannot start %s in state %s" %
@@ -85,6 +105,12 @@ class Task(object):
 
     @synchronized
     def wait(self):
+        """Wait on a task to finish and stop it when it has finished.
+
+        Raises:
+            RuntimeError: If the task hasn't been started or has already been
+                stopped.
+        """
         if self._status is not TaskStatus.STARTED:
             raise RuntimeError("Cannot wait on %s in state %s" %
                                (self, self._status))
@@ -97,6 +123,12 @@ class Task(object):
 
     @synchronized
     def stop(self):
+        """Stop a task immediately.
+
+        Raises:
+            RuntimeError: If the task hasn't been started or has already been
+                stopped.
+        """
         if self._status is TaskStatus.STOPPED:
             return
 
@@ -113,6 +145,13 @@ class Task(object):
 
     @synchronized
     def reset(self):
+        """Reset a task immediately.
+
+        Allows a task to be started again, clears the ``return_values``.
+
+        Raises:
+            RuntimeError: If the task has not been stopped.
+        """
         if self._status is not TaskStatus.STOPPED:
             raise RuntimeError("Cannot reset %s in state %s" %
                                (self, self._status))
@@ -131,7 +170,33 @@ class Task(object):
 
 # TODO: option for sending output to file
 class SubprocessTask(Task):
-    DEVNULL = file(os.devnull, 'w')
+    """A task to run a command as a subprocess on the local host.
+
+    This process will be killed when this task is stopped.
+    The return code of the process will be stored in
+    ``return_values[\'retcode\']``.
+
+    Args:
+        command (list of str): The command to execute.
+
+        quiet (bool): If `True`, the output of this command is not printed.
+            Default `False`.
+
+        return_output (bool): If `True`, the output of this command will be saved
+            in ``return_values[\'stdout\']`` and ``return_values[\'stderr\']``
+            when the subprocess is allowed to finish (i.e. when it is waited on
+            instead of being stopped). Default `False`.
+
+            **quiet** and **return_output** shouldn't both be true.
+
+        shell (bool): If `True`, allocate a shell to execute the process.
+            See: ``subprocess.Popen``. Default `False`.
+
+        require_success (bool): If `True` and if this task is waited on instead
+            of being stopped, raises a ``RuntimeError`` if the subprocess has
+            a return code other than `0`. Default `False`.
+    """
+    _DEVNULL = file(os.devnull, 'w')
 
     # pylint: disable=too-many-arguments
     def __init__(self, command, quiet=False, return_output=False, shell=False,
@@ -142,7 +207,7 @@ class SubprocessTask(Task):
         self._require_success = require_success
 
         self._popen_kwargs = {}
-        self._popen_kwargs['stdin'] = self.DEVNULL
+        self._popen_kwargs['stdin'] = self._DEVNULL
         if shell:
             self._popen_kwargs['shell'] = True
             self._command = ' '.join(self._command)
@@ -150,8 +215,8 @@ class SubprocessTask(Task):
             self._popen_kwargs['stdout'] = PIPE
             self._popen_kwargs['stderr'] = PIPE
         elif quiet:
-            self._popen_kwargs['stdout'] = self.DEVNULL
-            self._popen_kwargs['stderr'] = self.DEVNULL
+            self._popen_kwargs['stdout'] = self._DEVNULL
+            self._popen_kwargs['stderr'] = self._DEVNULL
 
         self._process = None
 
@@ -215,7 +280,7 @@ class RemoteTask(SubprocessTask):
             kill_proc = Popen(
                 ['ssh', self._host, 'kill -9 `cat %s` ; rm %s' %
                  (self._tmp_file_name, self._tmp_file_name)],
-                stdout=self.DEVNULL, stderr=self.DEVNULL, stdin=self.DEVNULL)
+                stdout=self._DEVNULL, stderr=self._DEVNULL, stdin=self._DEVNULL)
             kill_proc.wait()
 
 
