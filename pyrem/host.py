@@ -20,6 +20,7 @@ class Host(object):
     def __init__(self, hostname):
         self.hostname = hostname
 
+    # TODO: create a way to start the task immediately
     def run(self, command, **kwargs):
         """Build a task to run the command on a remote host.
 
