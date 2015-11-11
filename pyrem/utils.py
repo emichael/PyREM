@@ -9,7 +9,7 @@ from IPython.terminal.embed import InteractiveShellEmbed
 
 @decorator
 def synchronized(func, *args, **kwargs):
-    """Decorator to make function synchronized on self._lock.
+    """Function decorator to make function synchronized on ``self._lock``.
 
     If the first argument to the function (hopefully self) does not have a _lock
     attribute, then this decorator does nothing.
