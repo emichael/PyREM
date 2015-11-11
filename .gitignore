@@ -2,9 +2,9 @@
 *.pyc
 
 # Setuptools
-./dist/
-./build/
-./*.egg-info
+dist/
+build/
+*.egg-info
 
 # Coverage tests
 .coverage
