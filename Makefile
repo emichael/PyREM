@@ -1,3 +1,8 @@
+.PHONY: lint test clean
+
+test:
+	nosetests -w tests
+
 lint:
 	pylint pyrem
 	pep257 pyrem
