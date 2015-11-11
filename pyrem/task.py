@@ -47,7 +47,7 @@ def cleanup():
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
 
 class Task(object):
-    """The main unit of execution in PyREM.
+    """Abstract class, the main unit of execution in PyREM.
 
     If you would like to define your own type of ``Task``, you should at least
     implement the ``_start``, ``_wait``, ``_stop``, and ``_reset`` methods.
@@ -104,6 +104,9 @@ class Task(object):
         Raises:
             RuntimeError: If the task hasn't been started or has already been
                 stopped.
+
+        Returns:
+            The ``return_values`` of the task.
         """
         if self._status is not TaskStatus.STARTED:
             raise RuntimeError("Cannot wait on %s in state %s" %
