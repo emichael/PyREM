@@ -6,5 +6,8 @@
 /build/
 /*.egg-info
 
+# Coverage tests
+.coverage
+
 # Sublime
 *.sublime-workspace

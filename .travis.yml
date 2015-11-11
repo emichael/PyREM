@@ -5,9 +5,14 @@ python:
 
 install:
   - pip install -r requirements.txt
+  - pip install -r requirements-test.txt
 
 script:
   - make test
+  - nosetests --with-coverage --cover-package pyrem
+
+after_success:
+  - coveralls
 
 branches:
   only:
