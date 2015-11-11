@@ -36,3 +36,6 @@ class TestDummyTask(object):
         self.task.wait()
         assert self.task._status == TaskStatus.STOPPED
 
+    def test_status2(self):
+        self.task.start(wait=True)
+        assert self.task._status == TaskStatus.STOPPED
