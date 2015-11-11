@@ -25,10 +25,10 @@ class Host(object):
         This is just a wrapper around RemoteTask(...)
 
         Args:
-            command: List. The command to execute on the remote host.
-            quiet: Boolean. Whether or not to print process output.
+            command (list): The command to execute on the remote host.
+            quiet (bool): Whether or not to print process output.
         Return:
-            A RemoteTask.
+            A ``RemoteTask``.
         """
         return RemoteTask(self.hostname, command, **kwargs)
 

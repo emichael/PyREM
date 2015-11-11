@@ -50,6 +50,7 @@ def cleanup():
 # TODO: docs for everything
 
 class Task(object):
+    """The main unit of execution in PyREM."""
 
     def __init__(self):
         self._lock = RLock()
@@ -58,6 +59,15 @@ class Task(object):
 
     @synchronized
     def start(self, wait=False):
+        """Start a task.
+
+        This function depends on the underlying implementation of _start, which
+        any subclass of Task should implement.
+
+        Kwargs:
+            wait: boolean. Whether or not to wait on the task to finish before
+                  returning from this function
+        """
         if self._status is not TaskStatus.IDLE:
             raise RuntimeError("Cannot start %s in state %s" %
                                (self, self._status))
