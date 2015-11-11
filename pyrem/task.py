@@ -1,9 +1,4 @@
-"""task.py: Contains the main unit of execution in PyREM, the task.
-
-Tasks should be composable and should be able to be executed synchronously or
-asynchronously. There should be some easy way of combining tasks both
-sequentially and in parallel.
-"""
+"""task.py: Contains the main unit of execution in PyREM, the task."""
 
 __author__ = "Ellis Michael"
 __email__ = "emichael@cs.washington.edu"
@@ -50,7 +45,6 @@ def cleanup():
 
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
-# TODO: docs for everything
 
 class Task(object):
     """The main unit of execution in PyREM.
@@ -145,7 +139,7 @@ class Task(object):
 
     @synchronized
     def reset(self):
-        """Reset a task immediately.
+        """Reset a task.
 
         Allows a task to be started again, clears the ``return_values``.
 
@@ -250,6 +244,26 @@ class SubprocessTask(Task):
 
 # TODO: option for sending remote output to remote file
 class RemoteTask(SubprocessTask):
+    """A task to run a command on a remote host over ssh.
+
+    Any processes started on the remote host will be killed when this task is
+    stopped (unless `kill_remote=False` is specified).
+
+    ``return_values[\'retcode\']`` will contain the return code of the ssh
+    command, which should currently be ignored.
+
+    Args:
+        host (str): The host to run on.
+
+        command (list of str): The command to execute.
+
+        quiet (bool): See ``SubprocessTask``.
+
+        return_output (bool): See ``SubprocessTask``.
+
+        kill_remote (bool): If `True`, all processes started on the remote
+            server will be killed when this task is stopped.
+    """
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True):
         assert isinstance(command, list)
@@ -273,8 +287,12 @@ class RemoteTask(SubprocessTask):
                                          return_output=return_output,
                                          shell=False)
 
+    # TODO: capture the return code of the remote command
+
     def _stop(self):
+        # First, stop the ssh command
         super(RemoteTask, self)._stop()
+
         # Silence the kill_proc to prevent messages about already killed procs
         if self._kill_remote:
             kill_proc = Popen(
@@ -292,8 +310,14 @@ class RemoteTask(SubprocessTask):
 
 
 class Parallel(Task):
-    """A task that executes several given tasks in parallel."""
+    """A task that executes several given tasks in parallel.
 
+    Currently does not capture the return_values of the underlying tasks, this
+    will be fixed in the future.
+
+    Args:
+        tasks (list of ``Task``): Tasks to execute.
+    """
     def __init__(self, tasks):
         super(Parallel, self).__init__()
         self._tasks = tasks
@@ -303,11 +327,13 @@ class Parallel(Task):
             task.start(wait=False)
 
     def _wait(self):
+        # TODO: capture the return_values of the tasks
         for task in self._tasks:
             task.wait()
 
     def _stop(self):
         # TODO: this isn't quite right if there was an exception during _start
+        # there needs to be some way to kill only the tasks that were started
         for task in self._tasks:
             task.stop()
 
@@ -322,7 +348,14 @@ class Parallel(Task):
 
 
 class Sequential(Task):
-    """A tasks that executes several given tasks in sequence."""
+    """A tasks that executes several given tasks in sequence.
+
+    Currently does not capture the return_values of the underlying tasks, this
+    will be fixed in the future.
+
+    Args:
+        tasks (list of ``Task``): Tasks to execute.
+    """
 
     def __init__(self, tasks):
         super(Sequential, self).__init__()
@@ -347,6 +380,7 @@ class Sequential(Task):
         assert self._thread.is_alive()
 
     def _wait(self):
+        # TODO: capture the return_values of the tasks
         self._thread.join()
         if self._exception:
             raise self._exception[0], self._exception[1], self._exception[2]
