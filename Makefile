@@ -8,6 +8,6 @@ lint:
 	pep257 pyrem
 
 clean:
-	rm -rf build/ dist/ .coverage
+	rm -rf build/ dist/ .coverage PyREM.egg-info/
 	find -name '*.pyc' -delete
 	make -C docs clean
