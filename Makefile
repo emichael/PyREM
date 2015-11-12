@@ -8,6 +8,6 @@ lint:
 	pep257 pyrem
 
 clean:
-	rm -rf build/ dist/
+	rm -rf build/ dist/ .coverage
 	find -name '*.pyc' -delete
 	make -C docs clean
