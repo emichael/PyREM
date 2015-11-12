@@ -19,8 +19,9 @@ def synchronized(func, *args, **kwargs):
     with args[0]._lock: # pylint: disable=W0212
         return func(*args, **kwargs)
 
-interact = InteractiveShellEmbed(
-    banner1="---Starting Interactive Shell---\n",
-    exit_msg="---Resuming Program---\n")
+# TODO: figure out why this causes the REPL to change and fix it
+# interact = InteractiveShellEmbed(
+#     banner1="---Starting Interactive Shell---\n",
+#     exit_msg="---Resuming Program---\n")
 
 # TODO: util for capturing stdout and TEEing it to a file (either concat or overwrite)
