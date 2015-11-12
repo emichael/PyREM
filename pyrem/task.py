@@ -255,6 +255,9 @@ class RemoteTask(SubprocessTask):
     ``return_values[\'retcode\']`` will contain the return code of the ssh
     command, which should currently be ignored.
 
+    Attributes:
+        host (str): The name of the host the task will run on.
+
     Args:
         host (str): The host to run on.
 
@@ -270,7 +273,7 @@ class RemoteTask(SubprocessTask):
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True):
         assert isinstance(command, list)
-        self._host = host
+        self.host = host # TODO: disallow changing this attribute
 
         self._kill_remote = kill_remote
         if kill_remote:
@@ -299,7 +302,7 @@ class RemoteTask(SubprocessTask):
         # Silence the kill_proc to prevent messages about already killed procs
         if self._kill_remote:
             kill_proc = Popen(
-                ['ssh', self._host, 'kill -9 `cat %s` ; rm %s' %
+                ['ssh', self.host, 'kill -9 `cat %s` ; rm %s' %
                  (self._tmp_file_name, self._tmp_file_name)],
                 stdout=self._DEVNULL, stderr=self._DEVNULL, stdin=self._DEVNULL)
             kill_proc.wait()
