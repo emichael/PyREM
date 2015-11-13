@@ -42,6 +42,8 @@ for src in HOSTNAMES:
   for dst in HOSTNAMES:
     print '\t', pings[src][dst],
 
+raw_input("\nPress [ENTER] to continue...\n")
+
 f = Digraph()
 for src in HOSTNAMES:
   for dst in HOSTNAMES:

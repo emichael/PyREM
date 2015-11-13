@@ -2,7 +2,7 @@
 #
 # A shell script to get ping times between multiple machines.
 
-hosts=('candy' 'carrey' 'qbert' 'zork')
+hosts=('pacman' 'chong' 'short' 'zork')
 n_hosts=${#hosts[@]}
 
 declare -A pings
