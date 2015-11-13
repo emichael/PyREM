@@ -174,7 +174,9 @@ class SubprocessTask(Task):
     ``return_values[\'retcode\']``.
 
     Args:
-        command (list of str): The command to execute.
+        command (list of str): The command to execute. Each command-line
+        argument and flag should be a separate element in the command
+        list unless ``shell = True``.
 
         quiet (bool): If `True`, the output of this command is not printed.
             Default `False`.

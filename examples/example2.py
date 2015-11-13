@@ -14,7 +14,7 @@ CLIENT_HOST = LocalHost()
 # Create tasks to be run on the hosts.
 servers = Parallel([host.run(['iperf -s'], quiet=True)
                     for host in SERVER_HOSTS])
-client = Sequential([CLIENT_HOST.run(['iperf -c', host.hostname], shell=True)
+client = Sequential([CLIENT_HOST.run(['iperf', '-c', host.hostname])
                     for host in SERVER_HOSTS])
 
 # Start all the servers in parallel.
