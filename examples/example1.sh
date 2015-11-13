@@ -1,7 +1,7 @@
-#/bin/bash
-'''
-A simple shell script to run iperf between two machines.
-'''
+#!/bin/bash
+#
+# A simple shell script to run iperf between two machines.
+
 
 HOST1='tradewars.cs.washington.edu'
 HOST2='spyhunter.cs.washington.edu'
