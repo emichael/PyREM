@@ -4,14 +4,16 @@ A PyREM script to get ping times between multiple machines.
 
 import re
 import time
+
 from pyrem.host import RemoteHost
+from graphviz import Digraph
 
 # Declare the hosts.
-HOSTNAMES = ['candy', 'carrey', 'qbert', 'zork']
+HOSTNAMES = ['pacman', 'chong', 'short', 'zork']
 HOSTS = [RemoteHost(name) for name in HOSTNAMES]
 
 # Create tasks to be run on the hosts.
-tests = [src.run(['ping -c 5', dst.hostname], return_output=True)
+tests = [src.run(['ping -c 10', dst.hostname], return_output=True)
           for src in HOSTS
             for dst in HOSTS]
 
@@ -39,3 +41,11 @@ for src in HOSTNAMES:
   print '\n', src,
   for dst in HOSTNAMES:
     print '\t', pings[src][dst],
+
+f = Digraph()
+for src in HOSTNAMES:
+  for dst in HOSTNAMES:
+    if src == dst:
+      continue
+    f.edge(src, dst, label=pings[src][dst])
+f.view()
