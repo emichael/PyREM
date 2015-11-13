@@ -1,14 +1,13 @@
-#/bin/bash
-'''
-A shell script to run iperf between multiple machines.
-'''
+#!/bin/bash
+#
+# A shell script to run iperf between multiple machines.
 
-SERVER_HOSTS=('tradewars', 'spyhunter', 'zork')
+SERVER_HOSTS=('tradewars' 'spyhunter' 'zork')
 
 # Start the servers.
 for host in ${SERVER_HOSTS[@]}
 do
-  ssh ${host}.cs.washington.edu "iperf -s &"
+  ssh ${host}.cs.washington.edu "iperf -s > /dev/null 2>&1 &"
 done
 
 sleep 1
