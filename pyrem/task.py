@@ -10,6 +10,7 @@ import atexit
 import os
 import random
 import string
+import signal
 import sys
 
 from enum import Enum
@@ -43,6 +44,13 @@ def cleanup():
                    (task, exc[0], exc[1], exc[2]))
             continue
 
+def sigterm_handler(_sig, _frame):
+    sys.exit(0)
+
+# Register a SIGTERM handler if one is not already registered.
+# By catching the signal atexit can do its thing in the case of SIGTERM.
+if not signal.getsignal(signal.SIGTERM):
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
 # TODO: create a wait_stopped() so that Tasks can be stopped in parallel
 
