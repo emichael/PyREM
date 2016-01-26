@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   examples
    pyrem
 
 Indices and tables
