@@ -189,10 +189,11 @@ class SubprocessTask(Task):
         quiet (bool): If `True`, the output of this command is not printed.
             Default `False`.
 
-        return_output (bool): If `True`, the output of this command will be saved
-            in ``return_values[\'stdout\']`` and ``return_values[\'stderr\']``
-            when the subprocess is allowed to finish (i.e. when it is waited on
-            instead of being stopped). Default `False`.
+        return_output (bool): If `True`, the output of this command will be
+            saved in ``return_values[\'stdout\']`` and
+            ``return_values[\'stderr\']`` when the subprocess is allowed to
+            finish (i.e. when it is waited on instead of being stopped).
+            Default `False`.
 
             **quiet** and **return_output** shouldn't both be true.
 
