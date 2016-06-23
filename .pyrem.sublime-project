@@ -5,12 +5,14 @@
       "file_exclude_patterns":
       [
         "*.sublime-workspace",
-        "*.pyc"
+        "*.pyc",
+        ".coverage"
       ],
       "folder_exclude_patterns":
       [
         "build",
-        "dist"
+        "dist",
+        "*.egg-info"
       ],
       "name": "PyREM Root",
       "path": "."
