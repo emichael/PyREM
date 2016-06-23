@@ -12,7 +12,7 @@ def read(*path):
 ################################################################################
 NAME = 'PyREM'
 DESCRIPTION = "Python Remote Experiment Runner"
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 URL = 'https://github.com/emichael/PyREM'
 AUTHOR = "Ellis Michael"
 AUTHOR_EMAIL = 'ellis@ellismichael.com'
@@ -49,5 +49,4 @@ if __name__ == '__main__':
           long_description=LONG_DESCRIPTION,
           license=LICENSE,
           classifiers=CLASSIFIERS,
-          install_requires=INSTALL_REQUIRES
-    )
+          install_requires=INSTALL_REQUIRES)
