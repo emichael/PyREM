@@ -25,18 +25,18 @@ path and install the dependencies (``pip install -r requirements.txt``).
 Documentation
 -------------
 You can see the documentation for both the current development version and the
-latest release on `Read the Docs <http://pyrem.readthedocs.io/>`.
+latest release on `Read the Docs <http://pyrem.readthedocs.io/>`_.
 
 Verifying Releases
 ------------------
 You can verify the signature on my
-`releases on PyPI <https://pypi.python.org/pypi/PyREM>` using my public key on
-`Keybase <https://keybase.io/emichael`.
+`releases on PyPI <https://pypi.python.org/pypi/PyREM>`_ using my public key on
+`Keybase <https://keybase.io/emichael>`_.
 
 Contributing
 ------------
 File issues or send pull requests on
-`GitHub <https://github.com/emichael/PyREM>`. If you do send a pull request,
+`GitHub <https://github.com/emichael/PyREM>`_. If you do send a pull request,
 please send it for the ``develop`` branch.
 
 To build PyREM locally and run the tests, you will need to install the
