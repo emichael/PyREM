@@ -7,6 +7,7 @@ __author__ = "Ellis Michael"
 __email__ = "emichael@cs.washington.edu"
 
 
+import os
 import platform
 
 from pyrem.task import SubprocessTask, RemoteTask
@@ -41,16 +42,28 @@ class RemoteHost(Host):
 
     Args:
         hostname (str): The hostname of the remote host.
+
+        identity_file (str): Path to identity file passed to ssh. Default
+            `None`.
     """
-    def __init__(self, hostname):
+    def __init__(self, hostname, identity_file=None):
         super(RemoteHost, self).__init__(hostname)
+        self._identity_file = identity_file
 
     def run(self, command, **kwargs):
         """Run a command on the remote host.
 
         This is just a wrapper around ``RemoteTask(self.hostname, ...)``
         """
-        return RemoteTask(self.hostname, command, **kwargs)
+        return RemoteTask(self.hostname, command,
+                          identity_file=self._identity_file, **kwargs)
+
+    def _rsync_cmd(self):
+        """Helper method to generate base rsync command."""
+        cmd = ['rsync']
+        if self._identity_file:
+            cmd += ['-e', 'ssh -i ' + os.path.expanduser(self._identity_file)]
+        return cmd
 
     def send_file(self, file_name, remote_destination=None, **kwargs):
         """Send a file to a remote host with rsync.
@@ -72,8 +85,8 @@ class RemoteHost(Host):
             remote_destination = file_name
 
         return SubprocessTask(
-            ['rsync', '-ut', file_name,
-             '%s:%s' % (self.hostname, remote_destination)],
+            self._rsync_cmd() +
+            ['-ut', file_name, '%s:%s' % (self.hostname, remote_destination)],
             **kwargs)
 
     def get_file(self, file_name, local_destination=None, **kwargs):
@@ -96,8 +109,8 @@ class RemoteHost(Host):
             local_destination = file_name
 
         return SubprocessTask(
-            ['rsync', '-ut', '%s:%s' % (self.hostname, file_name),
-             local_destination],
+            self._rsync_cmd() +
+            ['-ut', '%s:%s' % (self.hostname, file_name), local_destination],
             **kwargs)
 
 

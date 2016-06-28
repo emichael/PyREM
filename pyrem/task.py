@@ -280,11 +280,17 @@ class RemoteTask(SubprocessTask):
 
         kill_remote (bool): If `True`, all processes started on the remote
             server will be killed when this task is stopped.
+
+        identity_file (str): Path to identity file passed to ssh. Default
+            `None`.
     """
     def __init__(self, host, command, quiet=False, return_output=False,
-                 kill_remote=True):
+                 kill_remote=True, identity_file=None):
         assert isinstance(command, list)
         self.host = host # TODO: disallow changing this attribute
+
+        # Expand the path to the identity file
+        identity_file = os.path.expanduser(identity_file)
 
         self._kill_remote = kill_remote
         if kill_remote:
@@ -299,7 +305,12 @@ class RemoteTask(SubprocessTask):
             # least warn the user in RemoteTask's docstring
             command.append(' & jobs -p >%s ; wait' % self._tmp_file_name)
 
-        super(RemoteTask, self).__init__(['ssh', host, ' '.join(command)],
+        if identity_file:
+            ssh_cmd = ['ssh', '-i', identity_file, host, ' '.join(command)]
+        else:
+            ssh_cmd = ['ssh', host, ' '.join(command)]
+
+        super(RemoteTask, self).__init__(ssh_cmd,
                                          quiet=quiet,
                                          return_output=return_output,
                                          shell=False)
