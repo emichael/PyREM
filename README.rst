@@ -6,6 +6,7 @@
     :target: http://pyrem.readthedocs.org/en/latest/?badge=latest
 .. image:: https://landscape.io/github/emichael/PyREM/develop/landscape.svg?style=flat
     :target: https://landscape.io/github/emichael/PyREM/develop
+    :alt: Code Health
 .. image:: https://gemnasium.com/emichael/PyREM.svg
     :target: https://gemnasium.com/emichael/PyREM
 
