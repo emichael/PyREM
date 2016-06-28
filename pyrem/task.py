@@ -13,6 +13,7 @@ import string
 import signal
 import sys
 
+from collections import defaultdict
 from enum import Enum
 from subprocess import Popen, PIPE
 from threading import RLock, Thread
@@ -291,7 +292,15 @@ class RemoteTask(SubprocessTask):
 
         # Expand the path to the identity file
         identity_file = os.path.expanduser(identity_file)
+        self._identity_file = identity_file
 
+        # Log the other args
+        self._command = command
+        self._quiet = quiet
+        self._return_output = return_output
+        self._kill_remote = kill_remote
+
+        # If kill remote, add the PID logging script to the command
         self._kill_remote = kill_remote
         if kill_remote:
             # Temp file holds the PIDs of processes started on remote host
@@ -300,9 +309,12 @@ class RemoteTask(SubprocessTask):
                     string.ascii_lowercase + string.digits)
                 for _ in range(8))
             # TODO: Ending the user's command with ' & jobs ...' might not be
-            # safe. If the command ends in a &, for instance, this will just
-            # fail on the spot. Try to figure out a good way around this, but at
-            # least warn the user in RemoteTask's docstring
+            #       safe. If the command ends in a &, for instance, this will
+            #       just fail on the spot. Try to figure out a good way around
+            #       this, but at least warn the user in RemoteTask's docstring\
+
+            # TODO: handle shells like zsh where the -p flag doesn't just print
+            #       out the PIDs
             command.append(' & jobs -p >%s ; wait' % self._tmp_file_name)
 
         if identity_file:
@@ -345,10 +357,56 @@ class Parallel(Task):
 
     Args:
         tasks (list of ``Task``): Tasks to execute.
+
+        aggregate (bool): If `True`, will combine multiple RemoteTasks on the
+            same host to use a single ssh session. Default `False`.
+
+            Example: If you pass Parallel 6 tasks, 3 of which are running on
+            host A and 3 of which are running on host B, aggregate will combine
+            them into 2 tasks: one for host A and one for host B.
+
+            Warning: The combined task will get its other options (``quiet``,
+            ``kill_remote``, etc.) from one of the constituent commands. If you
+            want to ensure the remote processes are killed, ensure that
+            ``kill_remote`` is `True` for all processes on that host. If you
+            rely on returned output for some of the commands, don't use
+            aggregate (output will get mixed between all commands).
     """
-    def __init__(self, tasks):
+    def __init__(self, tasks, aggregate=False):
         super(Parallel, self).__init__()
         self._tasks = tasks
+
+        if aggregate:
+            self._aggregate()
+
+    def _aggregate(self):
+        """Helper method to aggregate RemoteTasks into single ssh session."""
+        # pylint: disable=W0212
+        nonremote = [t for t in self._tasks if not isinstance(t, RemoteTask)]
+        remote = [t for t in self._tasks if isinstance(t, RemoteTask)]
+
+        host_dict = defaultdict(list)
+        for task in remote:
+            host_dict[task.host].append(task)
+
+        aggregated = []
+        for task_group in host_dict.values():
+            # Build up combined command
+            combined_cmd = []
+            for task in task_group:
+                if combined_cmd:
+                    combined_cmd.append('&')
+                combined_cmd.append(task._command)
+
+            # Now, generated aggregate task
+            t0 = task_group[0] # pylint: disable=C0103
+            task = RemoteTask(
+                t0.host, combined_cmd, t0._quiet, t0._return_output,
+                t0._kill_remote, t0._identity_file)
+
+            aggregated.append(task)
+
+        self._tasks = nonremote + aggregated
 
     def _start(self):
         for task in self._tasks:
