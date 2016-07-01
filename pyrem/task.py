@@ -296,7 +296,7 @@ class RemoteTask(SubprocessTask):
         self._identity_file = identity_file
 
         # Log the other args
-        self._command = command
+        self._remote_command = list(command)
         self._quiet = quiet
         self._return_output = return_output
         self._kill_remote = kill_remote
@@ -397,7 +397,7 @@ class Parallel(Task):
             for task in task_group:
                 if combined_cmd:
                     combined_cmd.append('&')
-                combined_cmd.append(' '.join(task._command))
+                combined_cmd.append(' '.join(task._remote_command))
 
             # Now, generated aggregate task
             t0 = task_group[0] # pylint: disable=C0103
