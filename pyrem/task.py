@@ -291,7 +291,8 @@ class RemoteTask(SubprocessTask):
         self.host = host # TODO: disallow changing this attribute
 
         # Expand the path to the identity file
-        identity_file = os.path.expanduser(identity_file)
+        if identity_file:
+            identity_file = os.path.expanduser(identity_file)
         self._identity_file = identity_file
 
         # Log the other args
