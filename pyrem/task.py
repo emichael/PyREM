@@ -397,7 +397,7 @@ class Parallel(Task):
             for task in task_group:
                 if combined_cmd:
                     combined_cmd.append('&')
-                combined_cmd.append(task._command)
+                combined_cmd.append(' '.join(task._command))
 
             # Now, generated aggregate task
             t0 = task_group[0] # pylint: disable=C0103
