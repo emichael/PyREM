@@ -17,6 +17,7 @@ from collections import defaultdict
 from enum import Enum
 from subprocess import Popen, PIPE
 from threading import RLock, Thread
+from traceback import format_exception
 
 from pyrem.utils import synchronized
 
@@ -40,9 +41,8 @@ def cleanup():
         try:
             task.stop()
         except: # pylint: disable=W0702
-            exc = sys.exc_info()
-            print ("Encountered exception during cleanup of %s.\n\t%s, %s, %s" %
-                   (task, exc[0], exc[1], exc[2]))
+            etype, value, trace = sys.exc_info()
+            print ''.join(format_exception(etype, value, trace, None))
             continue
 
 def sigterm_handler(_sig, _frame):
