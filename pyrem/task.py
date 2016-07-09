@@ -42,7 +42,9 @@ def cleanup():
             task.stop()
         except: # pylint: disable=W0702
             etype, value, trace = sys.exc_info()
-            print ''.join(format_exception(etype, value, trace, None))
+            # Disregard no such process exceptions, print out the rest
+            if not (isinstance(value, OSError) and value.errno == 3):
+                print ''.join(format_exception(etype, value, trace, None))
             continue
 
 def sigterm_handler(_sig, _frame):
