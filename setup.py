@@ -12,7 +12,7 @@ def read(*path):
 ################################################################################
 NAME = 'PyREM'
 DESCRIPTION = "Python Remote Experiment Runner"
-VERSION = '0.1.3'
+VERSION = '0.1.4'
 URL = 'https://github.com/emichael/PyREM'
 AUTHOR = "Ellis Michael"
 AUTHOR_EMAIL = 'ellis@ellismichael.com'
