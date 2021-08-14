@@ -222,7 +222,7 @@ class SubprocessTask(Task):
         if shell:
             self._popen_kwargs['shell'] = True
             if isinstance(command, list):
-                self._command = ' '.join(command)
+                self._command = ' '.join(command)  # TODO shlex
             else:
                 self._command = command
         else:
@@ -295,7 +295,9 @@ class RemoteTask(SubprocessTask):
     """
     def __init__(self, host, command, quiet=False, return_output=False,
                  kill_remote=True, identity_file=None):
-        assert isinstance(command, list)
+        # assert isinstance(command, list)
+        if isinstance(command, list):
+            command = ' '.join(command)  # TODO shlex
         self.host = host # TODO: disallow changing this attribute
 
         # Expand the path to the identity file
@@ -324,12 +326,13 @@ class RemoteTask(SubprocessTask):
 
             # TODO: handle shells like zsh where the -p flag doesn't just print
             #       out the PIDs
-            command.append(' & jobs -p >%s ; wait' % self._tmp_file_name)
+            # command.append(' & jobs -p >%s ; wait' % self._tmp_file_name)
+            command += f' & jobs -p >{self._tmp_file_name} ; wait'
 
         if identity_file:
-            ssh_cmd = ['ssh', '-i', identity_file, host, ' '.join(command)]
+            ssh_cmd = ['ssh', '-i', identity_file, host, command]
         else:
-            ssh_cmd = ['ssh', host, ' '.join(command)]
+            ssh_cmd = ['ssh', host, command]
 
         super(RemoteTask, self).__init__(ssh_cmd,
                                          quiet=quiet,
