@@ -213,15 +213,21 @@ class SubprocessTask(Task):
     def __init__(self, command, quiet=False, return_output=False, shell=False,
                  require_success=False):
         super(SubprocessTask, self).__init__()
-        assert isinstance(command, list)
-        self._command = [str(c) for c in command]
+        # assert isinstance(command, list)
+        # self._command = [str(c) for c in command]
         self._require_success = require_success
 
         self._popen_kwargs = {}
         self._popen_kwargs['stdin'] = self._DEVNULL
         if shell:
             self._popen_kwargs['shell'] = True
-            self._command = ' '.join(self._command)
+            if isinstance(command, list):
+                self._command = ' '.join(command)
+            else:
+                self._command = command
+        else:
+            assert isinstance(command, list)
+            self._command = [str(c) for c in command]
         if return_output:
             self._popen_kwargs['stdout'] = PIPE
             self._popen_kwargs['stderr'] = PIPE
