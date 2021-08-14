@@ -226,7 +226,7 @@ class SubprocessTask(Task):
             else:
                 self._command = command
             # https://stackoverflow.com/a/13143013
-            self._command = 'exec ' + self._command
+            self._command = f'exec bash -c "{self._command}"'
         else:
             assert isinstance(command, list)
             self._command = [str(c) for c in command]
