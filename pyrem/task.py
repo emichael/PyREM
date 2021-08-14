@@ -36,7 +36,7 @@ def cleanup():
     """
     to_stop = STARTED_TASKS.copy()
     if to_stop:
-        print "Cleaning up..."
+        print("Cleaning up...")
     for task in to_stop:
         try:
             task.stop()
@@ -44,7 +44,7 @@ def cleanup():
             etype, value, trace = sys.exc_info()
             # Disregard no such process exceptions, print out the rest
             if not (isinstance(value, OSError) and value.errno == 3):
-                print ''.join(format_exception(etype, value, trace, None))
+                print(''.join(format_exception(etype, value, trace, None)))
             continue
 
 def sigterm_handler(_sig, _frame):
@@ -207,7 +207,7 @@ class SubprocessTask(Task):
             of being stopped, raises a ``RuntimeError`` if the subprocess has
             a return code other than `0`. Default `False`.
     """
-    _DEVNULL = file(os.devnull, 'w')
+    _DEVNULL = open(os.devnull, 'w')
 
     # pylint: disable=too-many-arguments
     def __init__(self, command, quiet=False, return_output=False, shell=False,
@@ -472,7 +472,11 @@ class Sequential(Task):
         # TODO: capture the return_values of the tasks
         self._thread.join()
         if self._exception:
-            raise self._exception[0], self._exception[1], self._exception[2]
+            # https://portingguide.readthedocs.io/en/latest/exceptions.html#the-new-raise-syntax
+            # raise self._exception[0], self._exception[1], self._exception[2]
+            ex = self._exception[0](self._exception[1])
+            ex.__traceback__ = self._exception[2]
+            raise ex
 
     def _stop(self):
         # FIXME this isn't threadsafe at all, have to have a way to signal

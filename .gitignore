@@ -14,3 +14,6 @@ build/
 
 # Graph printouts
 *.gv*
+
+# venv
+venv
