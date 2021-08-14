@@ -55,6 +55,7 @@ class RemoteHost(Host):
 
         This is just a wrapper around ``RemoteTask(self.hostname, ...)``
         """
+        del kwargs['shell']  # for passing shell argument universal to a list of polymorphic Host
         return RemoteTask(self.hostname, command,
                           identity_file=self._identity_file, **kwargs)
 
