@@ -1,7 +1,7 @@
 .PHONY: lint test clean
 
 test:
-	nosetests -w tests
+	nosetests3 -w tests
 
 lint:
 	pylint pyrem

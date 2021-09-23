@@ -473,7 +473,6 @@ class Sequential(Task):
         self._thread.join()
         if self._exception:
             # https://portingguide.readthedocs.io/en/latest/exceptions.html#the-new-raise-syntax
-            # raise self._exception[0], self._exception[1], self._exception[2]
             ex = self._exception[0](self._exception[1])
             ex.__traceback__ = self._exception[2]
             raise ex

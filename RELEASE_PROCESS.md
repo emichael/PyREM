@@ -15,7 +15,7 @@ Release Process
 6. Build sdist and wheel (`python setup.py sdist bdist_wheel`).
 
 7. Push to test PyPI server
-   (`twine upload -r test -s dist/PyREM-*`).
+   (`twine upload -r testpypi -s dist/PyREM-*`).
 
 8. Check test staging server version.
 
